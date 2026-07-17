@@ -16,6 +16,18 @@ describe('assignRoles', () => {
     }
   })
 
+  it('adds exactly one Detective when enabled, alongside one Doctor and Impostor', () => {
+    const players = makeCrew(6)
+    for (let r = 0; r < 300; r++) {
+      const { roles } = assignRoles(players, false, true)
+      const vals = players.map((p) => roles.get(p.id))
+      expect(vals.filter((v) => v === 'impostor').length).toBe(1)
+      expect(vals.filter((v) => v === 'doctor').length).toBe(1)
+      expect(vals.filter((v) => v === 'detective').length).toBe(1)
+      expect(vals.filter((v) => v === 'crewmate').length).toBe(3)
+    }
+  })
+
   it('produces two Impostors when enabled, still exactly one Doctor (A4)', () => {
     const players = makeCrew(11)
     for (let r = 0; r < 300; r++) {

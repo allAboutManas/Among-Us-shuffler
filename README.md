@@ -23,22 +23,22 @@ npm test         # unit + integration + DOM smoke tests
 
 ## How a round goes
 
-1. **Lobby** — type everyone in (4–15 players). At 10+, a toggle offers a second Impostor.
+1. **Lobby** — type everyone in (4–15 players). At 10+, a toggle offers a second Werewolf.
 2. **Assigning** — a ~2.5s shuffle. Roles are already decided; the animation is pure theater (watch for the red-herring flicker).
 3. **Reveal** — pass the phone. Each player **presses and holds** their sealed card to peek. A cover screen hides everything between hand-offs, so nothing leaks.
 4. **In game** — living roster + ghosts. Tap a name to mark them out (one confirm). Call a 2-minute meeting whenever.
 5. **Game over** — the app runs the win check after every elimination and revive, and calls the game the instant it's decided.
 
-Roles: **1 Impostor** (or 2 at 10+ players), **exactly 1 Doctor** (one revive per game), everyone else **Crewmate**.
+Roles: **1 Werewolf** (or 2 at 10+ players), **exactly 1 Doctor** (one revive per game), an optional **Detective** (one investigation per game), everyone else a **Villager**. *(The internal role keys stay `impostor`/`crewmate` — only the player-facing theme changed, so the game logic is untouched.)*
 
 ## Architecture
 
 - **React 18 + Vite + Tailwind + Framer Motion.** Fully client-side.
 - **State:** one reducer at the app root (`src/state/reducer.js`). No Redux/Zustand.
 - **Fairness:** Fisher-Yates seeded from `crypto.getRandomValues()` with rejection sampling — never `Math.random()`, never `sort(() => Math.random()-0.5)` (`src/lib/random.js`).
-- **Win check:** a pure function, unit-tested first (`src/lib/winCheck.js`). Crew wins when all Impostors are out; Impostors win when they reach parity with the crew.
+- **Win check:** a pure function, unit-tested first (`src/lib/winCheck.js`). The village wins when all Werewolves are out; the Werewolves win when they reach parity with the village.
 - **Timer:** drift-free. Stores an absolute `endsAt` and derives the remaining time from the wall clock on a 250ms tick, re-syncing on `visibilitychange` — so it stays accurate even when the tab is backgrounded (`src/hooks/useTimer.js`).
-- **Persistence:** `localStorage` holds only the roster and preferences. **Roles and alive-flags are never persisted** — a mid-game refresh ends the game rather than leaking who the Impostor is.
+- **Persistence:** `localStorage` holds only the roster and preferences. **Roles and alive-flags are never persisted** — a mid-game refresh ends the game rather than leaking who the Werewolf is.
 
 ## Design — *Cold Vacuum*
 
@@ -48,8 +48,9 @@ A cold, industrial ship's terminal. The only warmth is the players' own color ch
 |---|---|
 | `--void` / `--hull` / `--strut` | background / cards / borders |
 | `--signal` (mint) | primary accent, crew win |
-| `--breach` (red) | Impostor, "out", final 10s, Impostor win |
+| `--breach` (red) | Werewolf, "out", final 10s, Werewolf win |
 | `--triage` (amber) | Doctor, timer warning |
+| `--sleuth` (blue) | Detective |
 
 The signature transition is the **airlock**: two blast-door panels part with a seam of light, used sparingly for entering Assigning, the "Out" moment, and Game Over.
 

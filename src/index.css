@@ -13,6 +13,7 @@
   --signal: #4dffc3;
   --breach: #ff3b5c;
   --triage: #ffb84d;
+  --sleuth: #7c9dff;
 
   /* App chrome */
   --app-max: 480px;
@@ -43,6 +44,22 @@ body {
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  /* App-like, not document-like: a tap or press-and-hold must never select
+     text or pop the iOS/Android copy·paste·cut callout menu. The name input
+     re-enables selection below so names stay editable. */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Re-enable selection only where the user genuinely types/edits. */
+input,
+textarea,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* The starfield sits behind everything; subtle, cold. */

@@ -71,7 +71,7 @@ export default function Meeting({ state, dispatch }) {
               className="text-lg"
               onClick={() => dispatch({ type: 'END_MEETING' })}
             >
-              Back to crew
+              Back to the village
             </Button>
           </div>
         </motion.div>
@@ -174,7 +174,7 @@ export default function Meeting({ state, dispatch }) {
         open={!!confirm}
         player={confirm}
         title={`${confirm?.name} is out?`}
-        confirmLabel="Yes, they're out"
+        confirmLabel="Confirm — out"
         confirmVariant="breach"
         onCancel={() => setConfirm(null)}
         onConfirm={() => {

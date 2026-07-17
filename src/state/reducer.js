@@ -35,17 +35,22 @@ export function makeInitialState() {
     !!saved?.settings?.twoImpostors && players.length >= SECOND_IMPOSTOR_THRESHOLD
 
   return {
-    phase: 'lobby', // lobby|assigning|reveal|inGame|meeting|out|gameOver
+    // intro|lobby|assigning|reveal|hostReveal|inGame|meeting|out|gameOver
+    phase: 'intro',
     players,
     settings: {
       twoImpostors,
+      detective: saved?.settings?.detective !== false, // default on
       muted: !!saved?.settings?.muted,
       revealRoleOnOut: !!saved?.settings?.revealRoleOnOut,
     },
     revealIndex: 0,
     meeting: { endsAt: null, pausedRemainingMs: null },
     doctorReviveUsed: false,
+    detectiveUsed: false,
     lastOut: null, // player id, for the Out screen
+    outReason: null, // null | 'detective' — flavours the Out screen
+    investigation: null, // { targetName, correct } after a wrong Detective guess
     previousPhase: 'inGame', // where to return after the Out screen
     winner: null, // null | 'impostors' | 'crew' | 'abandoned'
     partner: {}, // impostor id → partner name (two-Impostor game)
@@ -162,12 +167,17 @@ export function reducer(state, action) {
       return withPersist({ ...state, settings })
     }
 
+    // ── Intro / rules ──────────────────────────────────────
+    case 'INTRO_DONE':
+      return { ...state, phase: 'lobby' }
+
     // ── Assigning ──────────────────────────────────────────
     case 'START_GAME': {
       if (state.players.length < MIN_PLAYERS) return state
       const { roles, partner } = assignRoles(
         state.players,
         state.settings.twoImpostors,
+        state.settings.detective,
       )
       const players = state.players.map((p) => ({
         ...p,
@@ -182,7 +192,10 @@ export function reducer(state, action) {
         phase: 'assigning',
         revealIndex: 0,
         doctorReviveUsed: false,
+        detectiveUsed: false,
         lastOut: null,
+        outReason: null,
+        investigation: null,
         winner: null,
         meeting: { endsAt: null, pausedRemainingMs: null },
         error: null,
@@ -204,10 +217,16 @@ export function reducer(state, action) {
     case 'NEXT_REVEAL': {
       const next = state.revealIndex + 1
       if (next >= state.players.length) {
-        return { ...state, phase: 'inGame', revealIndex: next }
+        // Everyone has peeked — hand the phone back to the host for a private
+        // who's-who briefing before the round begins.
+        return { ...state, phase: 'hostReveal', revealIndex: next }
       }
       return { ...state, revealIndex: next }
     }
+
+    // ── Host briefing → begin the round ────────────────────
+    case 'START_ROUND':
+      return { ...state, phase: 'inGame' }
 
     // ── Meeting ────────────────────────────────────────────
     case 'CALL_MEETING':
@@ -271,6 +290,7 @@ export function reducer(state, action) {
         ...state,
         players,
         lastOut: action.id,
+        outReason: null,
         // Remember where we came from so "Out" returns correctly, and so a
         // mid-meeting elimination ends the meeting.
         previousPhase: 'inGame',
@@ -280,12 +300,51 @@ export function reducer(state, action) {
       }
     }
 
+    // ── Detective investigation ────────────────────────────
+    case 'INVESTIGATE': {
+      if (state.detectiveUsed) return state
+      const target = state.players.find((p) => p.id === action.id)
+      if (!target || !target.alive) return state
+
+      // Wrong guess: nothing happens to the board, the guess is spent, the
+      // game runs on. Record it so the In Game screen can show the result.
+      if (target.role !== 'impostor') {
+        return {
+          ...state,
+          detectiveUsed: true,
+          investigation: { targetName: target.name, correct: false },
+        }
+      }
+
+      // Correct: the caught Impostor is ejected, then the win check runs — so
+      // with a lone Impostor the crew wins instantly.
+      const players = state.players.map((p) =>
+        p.id === action.id ? { ...p, alive: false } : p,
+      )
+      const winner = checkWinner(players)
+      return {
+        ...state,
+        players,
+        detectiveUsed: true,
+        investigation: null,
+        lastOut: action.id,
+        outReason: 'detective',
+        previousPhase: 'inGame',
+        phase: 'out',
+        meeting: { endsAt: null, pausedRemainingMs: null },
+        winner,
+      }
+    }
+
+    case 'CLEAR_INVESTIGATION':
+      return state.investigation ? { ...state, investigation: null } : state
+
     // After the Out animation resolves, route to gameOver or back inGame.
     case 'OUT_DONE': {
       if (state.winner) {
         return { ...state, phase: 'gameOver' }
       }
-      return { ...state, phase: 'inGame' }
+      return { ...state, phase: 'inGame', outReason: null }
     }
 
     case 'REVIVE': {
@@ -312,6 +371,7 @@ export function reducer(state, action) {
       const { roles, partner } = assignRoles(
         state.players,
         state.settings.twoImpostors,
+        state.settings.detective,
       )
       const players = state.players.map((p) => ({
         ...p,
@@ -326,7 +386,10 @@ export function reducer(state, action) {
         phase: 'assigning',
         revealIndex: 0,
         doctorReviveUsed: false,
+        detectiveUsed: false,
         lastOut: null,
+        outReason: null,
+        investigation: null,
         winner: null,
         meeting: { endsAt: null, pausedRemainingMs: null },
       }
@@ -346,7 +409,10 @@ export function reducer(state, action) {
         partner: {},
         revealIndex: 0,
         doctorReviveUsed: false,
+        detectiveUsed: false,
         lastOut: null,
+        outReason: null,
+        investigation: null,
         winner: null,
         meeting: { endsAt: null, pausedRemainingMs: null },
         error: null,

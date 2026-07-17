@@ -13,6 +13,7 @@ export default {
         signal: 'var(--signal)',
         breach: 'var(--breach)',
         triage: 'var(--triage)',
+        sleuth: 'var(--sleuth)',
       },
       fontFamily: {
         display: ['"Oswald"', '"Archivo Narrow"', 'system-ui', 'sans-serif'],

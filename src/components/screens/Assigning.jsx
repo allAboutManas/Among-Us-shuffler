@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import Crewmate from '../Crewmate.jsx'
 
 // Full-screen shuffle. Roughly 2.5s, NOT skippable — a deliberate stall so
 // the host can't be accused of peeking, and it builds tension. The roles are
@@ -8,14 +9,6 @@ import { motion, useReducedMotion } from 'framer-motion'
 // It means nothing. It's the red herring. It's the fun part.
 //
 // Reduced motion: a static 800ms "Assigning…" state, no scatter.
-
-const initials = (name) =>
-  name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 
 export default function Assigning({ players, onDone }) {
   const reduce = useReducedMotion()
@@ -89,16 +82,13 @@ export default function Assigning({ players, onDone }) {
               return (
                 <motion.div
                   key={p.id}
-                  className="absolute grid place-items-center rounded-full font-display"
+                  className="absolute grid place-items-center rounded-full"
                   style={{
                     width: chipSize,
                     height: chipSize,
-                    background: isFlicker ? 'var(--breach)' : p.color,
-                    color: 'rgba(0,0,0,0.6)',
-                    fontSize: chipSize * 0.4,
-                    boxShadow: isFlicker
-                      ? '0 0 20px 4px var(--breach)'
-                      : `0 0 0 2px rgba(255,255,255,0.14)`,
+                    filter: isFlicker
+                      ? 'drop-shadow(0 0 12px var(--breach))'
+                      : 'none',
                   }}
                   initial={{ x: 0, y: 0, scale: 0.3, opacity: 0 }}
                   animate={{
@@ -114,7 +104,10 @@ export default function Assigning({ players, onDone }) {
                     ease: 'easeInOut',
                   }}
                 >
-                  {initials(p.name)}
+                  <Crewmate
+                    color={isFlicker ? 'var(--breach)' : p.color}
+                    size={chipSize}
+                  />
                 </motion.div>
               )
             })}

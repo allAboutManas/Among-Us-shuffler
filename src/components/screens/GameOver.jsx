@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Button, Chip } from '../ui.jsx'
 import { ROLE_META } from '../../lib/assign.js'
 
-const ROLE_ORDER = { impostor: 0, doctor: 1, crewmate: 2 }
+const ROLE_ORDER = { impostor: 0, doctor: 1, detective: 2, crewmate: 3 }
 
 // Red confetti for the Impostor victory. Deterministic-ish spread by index so
 // it doesn't depend on Math.random timing; still lively.
@@ -66,7 +66,7 @@ export default function GameOver({ state, dispatch }) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              THE {impostors.length > 1 ? 'IMPOSTORS' : 'IMPOSTOR'} WIN
+              THE {impostors.length > 1 ? 'WEREWOLVES WIN' : 'WEREWOLF WINS'}
             </motion.p>
             <motion.h1
               className="mt-2 font-display text-5xl leading-tight text-vapor"
@@ -88,7 +88,7 @@ export default function GameOver({ state, dispatch }) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              CREW WINS
+              THE VILLAGE WINS
             </motion.p>
             <motion.h1
               className="mt-2 font-display text-5xl text-vapor"
@@ -96,7 +96,7 @@ export default function GameOver({ state, dispatch }) {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
             >
-              The crew survives.
+              The village survives.
             </motion.h1>
           </>
         )}
@@ -179,7 +179,7 @@ export default function GameOver({ state, dispatch }) {
           className="text-lg"
           onClick={() => dispatch({ type: 'PLAY_AGAIN' })}
         >
-          🔀 Play again (same crew)
+          🔀 Play again (same village)
         </Button>
         <Button
           variant="ghost"

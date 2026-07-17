@@ -11,6 +11,9 @@ export default function Out({ state, dispatch }) {
   const reduce = useReducedMotion()
   const player = state.players.find((p) => p.id === state.lastOut)
   const meta = player ? ROLE_META[player.role] : null
+  // A Detective catch is a confirmed Impostor, so it always reveals — the
+  // catch is the reveal. A normal ejection stays silent unless the host opted in.
+  const caught = state.outReason === 'detective'
 
   useEffect(() => {
     const t = setTimeout(() => dispatch({ type: 'OUT_DONE' }), reduce ? 1100 : 2500)
@@ -39,6 +42,16 @@ export default function Out({ state, dispatch }) {
           <Chip color={player.color} size={96} />
         </motion.div>
 
+        {caught && (
+          <motion.p
+            className="mb-1 font-display text-xl tracking-[0.2em] text-sleuth"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            🔍 THE DETECTIVE WAS RIGHT
+          </motion.p>
+        )}
+
         <motion.p
           className="font-display text-5xl tracking-wide text-vapor"
           initial={{ opacity: 0, y: 8 }}
@@ -48,16 +61,28 @@ export default function Out({ state, dispatch }) {
           {player.name} is out.
         </motion.p>
 
-        {state.settings.revealRoleOnOut && meta && (
+        {caught ? (
           <motion.p
-            className="mt-3 text-lg"
-            style={{ color: meta.color }}
+            className="mt-3 text-lg text-breach"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            {meta.icon} They were the {meta.label}.
+            {ROLE_META.impostor.icon} Caught — they were a Werewolf.
           </motion.p>
+        ) : (
+          state.settings.revealRoleOnOut &&
+          meta && (
+            <motion.p
+              className="mt-3 text-lg"
+              style={{ color: meta.color }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {meta.icon} They were the {meta.label}.
+            </motion.p>
+          )
         )}
 
         <p className="mt-8 text-sm text-vapor/30">tap to continue</p>

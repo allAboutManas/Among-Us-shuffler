@@ -2,10 +2,13 @@ import { useReducer } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { reducer, makeInitialState } from './state/reducer.js'
 import { AppShell, Backdrop } from './components/ui.jsx'
+import DeviceGate from './components/DeviceGate.jsx'
 import Airlock from './components/Airlock.jsx'
+import Intro from './components/screens/Intro.jsx'
 import Lobby from './components/screens/Lobby.jsx'
 import Assigning from './components/screens/Assigning.jsx'
 import Reveal from './components/screens/Reveal.jsx'
+import HostReveal from './components/screens/HostReveal.jsx'
 import InGame from './components/screens/InGame.jsx'
 import Meeting from './components/screens/Meeting.jsx'
 import Out from './components/screens/Out.jsx'
@@ -23,6 +26,8 @@ export default function App() {
 
   const screen = (() => {
     switch (state.phase) {
+      case 'intro':
+        return <Intro dispatch={dispatch} />
       case 'lobby':
         return <Lobby state={state} dispatch={dispatch} />
       case 'assigning':
@@ -34,6 +39,8 @@ export default function App() {
         )
       case 'reveal':
         return <Reveal state={state} dispatch={dispatch} />
+      case 'hostReveal':
+        return <HostReveal state={state} dispatch={dispatch} />
       case 'inGame':
         return <InGame state={state} dispatch={dispatch} />
       case 'meeting':
@@ -59,7 +66,7 @@ export default function App() {
   const usesAirlock = state.phase in AIRLOCK
 
   return (
-    <>
+    <DeviceGate>
       <Backdrop />
       <AppShell>
         <AnimatePresence mode="wait">
@@ -79,6 +86,6 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </AppShell>
-    </>
+    </DeviceGate>
   )
 }

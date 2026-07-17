@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button, Chip } from '../ui.jsx'
+import RulesContent from '../Rules.jsx'
 import {
   MIN_PLAYERS,
   MAX_PLAYERS,
   SECOND_IMPOSTOR_THRESHOLD,
 } from '../../state/reducer.js'
 
-const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`
+// Optional irregular plural (e.g. Werewolf → Werewolves); defaults to +s.
+const plural = (n, w, p) => `${n} ${n === 1 ? w : p || w + 's'}`
 
 // One roster row. Tap the name to edit it inline; blur or Enter commits.
 function PlayerRow({ player, onRename, onDelete }) {
@@ -106,13 +108,15 @@ export default function Lobby({ state, dispatch }) {
   const { players, settings, error } = state
   const [value, setValue] = useState('')
   const [confirmClear, setConfirmClear] = useState(false)
+  const [showRules, setShowRules] = useState(false)
   const inputRef = useRef(null)
 
   const count = players.length
   const canStart = count >= MIN_PLAYERS
   const showSecond = count >= SECOND_IMPOSTOR_THRESHOLD
   const impostors = settings.twoImpostors && showSecond ? 2 : 1
-  const crewmates = Math.max(0, count - impostors - 1)
+  const hasDetective = !!settings.detective
+  const crewmates = Math.max(0, count - impostors - 1 - (hasDetective ? 1 : 0))
 
   const add = () => {
     const name = value.trim()
@@ -134,13 +138,21 @@ export default function Lobby({ state, dispatch }) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="safe-top px-4 pb-2 pt-3">
-        <h1 className="font-display text-3xl tracking-wide text-vapor">
-          CREW CALL
-        </h1>
-        <p className="text-sm text-vapor/50">
-          Secret roles · meeting timer · auto win-check
-        </p>
+      <header className="safe-top flex items-start justify-between px-4 pb-2 pt-3">
+        <div>
+          <h1 className="font-display text-3xl tracking-wide text-vapor">
+            CREW CALL
+          </h1>
+          <p className="text-sm text-vapor/50">
+            Secret roles · meeting timer · auto win-check
+          </p>
+        </div>
+        <button
+          onClick={() => setShowRules(true)}
+          className="min-h-tap shrink-0 rounded-lg border border-strut px-3 text-sm text-vapor/70 hover:border-signal/60 hover:text-signal"
+        >
+          ? How to play
+        </button>
       </header>
 
       {/* Add input */}
@@ -184,7 +196,11 @@ export default function Lobby({ state, dispatch }) {
         {count === 0 ? (
           <div className="grid h-full place-items-center text-center">
             <div className="px-6">
-              <div className="mb-3 text-5xl opacity-30">🛰️</div>
+              <div className="mb-4 flex items-end justify-center gap-1 opacity-25">
+                <Chip color="#4DABF7" size={44} />
+                <Chip color="#F783AC" size={56} />
+                <Chip color="#A9E34B" size={44} />
+              </div>
               <p className="text-lg text-vapor/60">Nobody's here.</p>
               <p className="text-vapor/40">Add the first name.</p>
             </div>
@@ -217,10 +233,15 @@ export default function Lobby({ state, dispatch }) {
             <>
               <span className="text-vapor">{plural(count, 'player')}</span>
               <span className="text-vapor/40"> · </span>
-              {plural(impostors, 'Impostor')}
+              {plural(impostors, 'Werewolf', 'Werewolves')}
               <span className="text-vapor/40"> · </span>1 Doctor
+              {hasDetective && (
+                <>
+                  <span className="text-vapor/40"> · </span>1 Detective
+                </>
+              )}
               <span className="text-vapor/40"> · </span>
-              {plural(crewmates, 'Crewmate')}
+              {plural(crewmates, 'Villager')}
             </>
           )}
         </p>
@@ -237,10 +258,10 @@ export default function Lobby({ state, dispatch }) {
               className="overflow-hidden"
             >
               <div className="mb-2 flex items-center gap-3 rounded-xl border border-triage/40 bg-triage/10 px-3 py-2.5">
-                <span className="text-xl">👥</span>
+                <span className="text-xl">🐺</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-vapor">
-                    Big crew. Want a second Impostor?
+                    Big village. Want a second Werewolf?
                   </p>
                   <p className="text-xs text-vapor/50">
                     The whole group can see this setting.
@@ -255,12 +276,32 @@ export default function Lobby({ state, dispatch }) {
                       value: v,
                     })
                   }
-                  label="Second Impostor"
+                  label="Second Werewolf"
                 />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Detective toggle */}
+        {count > 0 && (
+          <div className="mb-2 flex items-center gap-3 rounded-xl border border-sleuth/40 bg-sleuth/10 px-3 py-2.5">
+            <span className="text-xl">🔍</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-vapor">Add a Detective?</p>
+              <p className="text-xs text-vapor/50">
+                One investigation per game — a correct call catches a Werewolf.
+              </p>
+            </div>
+            <Toggle
+              on={hasDetective}
+              onChange={(v) =>
+                dispatch({ type: 'SET_SETTING', key: 'detective', value: v })
+              }
+              label="Detective"
+            />
+          </div>
+        )}
 
         {/* Reveal-role-on-out option */}
         {count > 0 && (
@@ -322,6 +363,41 @@ export default function Lobby({ state, dispatch }) {
             ))}
         </div>
       </div>
+
+      {/* How-to-play overlay */}
+      <AnimatePresence>
+        {showRules && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-void"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="mx-auto flex h-full w-full max-w-app flex-col">
+              <header className="safe-top flex items-center justify-between px-5 pb-2 pt-4">
+                <h2 className="font-display text-2xl tracking-wide text-vapor">
+                  How to play
+                </h2>
+                <button
+                  onClick={() => setShowRules(false)}
+                  aria-label="Close rules"
+                  className="grid h-10 w-10 place-items-center rounded-lg text-2xl text-vapor/60 hover:text-vapor"
+                >
+                  ✕
+                </button>
+              </header>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5">
+                <RulesContent />
+              </div>
+              <div className="safe-bottom px-5 pt-2">
+                <Button variant="signal" full onClick={() => setShowRules(false)}>
+                  Got it
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

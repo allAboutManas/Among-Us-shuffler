@@ -12,9 +12,10 @@ import { fisherYates } from './random.js'
 /**
  * @param {Array} players  roster entries (need at least { id })
  * @param {boolean} twoImpostors
- * @returns {Map<id, 'impostor'|'doctor'|'crewmate'>} plus partner map
+ * @param {boolean} [detective=false]  assign one Detective after the Doctor
+ * @returns {{ roles: Map, partner: Map }}
  */
-export function assignRoles(players, twoImpostors) {
+export function assignRoles(players, twoImpostors, detective = false) {
   const shuffled = fisherYates(players)
   const impostorCount = twoImpostors ? 2 : 1
 
@@ -30,32 +31,51 @@ export function assignRoles(players, twoImpostors) {
     partner.set(impostors[1].id, impostors[0].name)
   }
 
-  const doctor = shuffled[impostorCount]
-  roles.set(doctor.id, 'doctor')
+  // Doctor, then (optionally) Detective, then everyone else Crewmates.
+  let cursor = impostorCount
+  roles.set(shuffled[cursor].id, 'doctor')
+  cursor += 1
 
-  shuffled.slice(impostorCount + 1).forEach((p) => roles.set(p.id, 'crewmate'))
+  if (detective && shuffled[cursor]) {
+    roles.set(shuffled[cursor].id, 'detective')
+    cursor += 1
+  }
+
+  shuffled.slice(cursor).forEach((p) => roles.set(p.id, 'crewmate'))
 
   return { roles, partner }
 }
 
 // Copy shown by the reveal card and the final roster, per role.
+//
+// NOTE: the internal role keys stay 'impostor' / 'crewmate' so none of the
+// game logic changes — only the player-facing labels/icons are themed. The
+// village is under threat from a Werewolf hiding among them.
 export const ROLE_META = {
   impostor: {
-    label: 'Impostor',
-    icon: '▲',
+    label: 'Werewolf',
+    icon: '☾',
     color: 'var(--breach)',
-    blurb: "You're the Impostor. Blend in. Eliminate the crew before they figure you out.",
+    blurb:
+      "You're the Werewolf. Blend in with the village. Pick off the villagers before they figure you out.",
   },
   doctor: {
     label: 'Doctor',
     icon: '✚',
     color: 'var(--triage)',
-    blurb: "You're the Doctor. You can revive one eliminated player, once per game.",
+    blurb: "You're the Doctor. You can revive one fallen player, once per game.",
+  },
+  detective: {
+    label: 'Detective',
+    icon: '◎',
+    color: 'var(--sleuth)',
+    blurb:
+      "You're the Detective. Once per game you can investigate a player — if they're a Werewolf, they're caught.",
   },
   crewmate: {
-    label: 'Crewmate',
-    icon: '●',
+    label: 'Villager',
+    icon: '⌂',
     color: 'var(--signal)',
-    blurb: "You're a Crewmate. Finish your tasks and find the Impostor.",
+    blurb: "You're a Villager. Stay alive and root out the Werewolf.",
   },
 }

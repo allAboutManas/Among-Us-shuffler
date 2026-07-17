@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import Crewmate from './Crewmate.jsx'
 
 // ─────────────────────────────────────────────────────────────
 // Shared primitives. Every interactive element clears the 48px tap
@@ -9,6 +10,7 @@ const VARIANTS = {
   signal: 'bg-signal text-void font-semibold',
   breach: 'bg-breach text-white font-semibold',
   triage: 'bg-triage text-void font-semibold',
+  sleuth: 'bg-sleuth text-void font-semibold',
   ghost: 'bg-hull text-vapor border border-strut',
   quiet: 'bg-transparent text-vapor/70 border border-transparent',
 }
@@ -39,24 +41,27 @@ export function Button({
   )
 }
 
-// A round player color chip with an optional glyph, sized by `size`.
+// A player token: the recolourable crewmate, in the player's colour. An
+// optional `glyph` (a role icon) rides along as a small corner badge.
 export function Chip({ color, size = 40, glyph, className = '', style }) {
   return (
     <span
-      className={['inline-flex shrink-0 items-center justify-center rounded-full', className].join(' ')}
-      style={{
-        width: size,
-        height: size,
-        background: color,
-        boxShadow: `0 0 0 2px rgba(255,255,255,0.14), 0 2px 8px -2px ${color}`,
-        ...style,
-      }}
+      className={['relative inline-flex shrink-0 items-center justify-center', className].join(' ')}
+      style={{ width: size, height: size, ...style }}
       aria-hidden="true"
     >
+      <Crewmate color={color} size={size} />
       {glyph ? (
         <span
-          className="font-display"
-          style={{ color: 'rgba(0,0,0,0.55)', fontSize: size * 0.5 }}
+          className="absolute -bottom-1 -right-1 grid place-items-center rounded-full font-display leading-none"
+          style={{
+            width: size * 0.52,
+            height: size * 0.52,
+            background: 'var(--void)',
+            border: '1px solid var(--strut)',
+            color: 'var(--vapor)',
+            fontSize: size * 0.3,
+          }}
         >
           {glyph}
         </span>

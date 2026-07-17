@@ -75,6 +75,10 @@ function HoldCard({ player, partnerName, onSeen }) {
               <p className="mt-6 text-sm text-vapor/60">
                 {holding ? 'Keep holding…' : 'Press and hold to reveal'}
               </p>
+              {/* Quiet reminder in case they didn't heed the cover */}
+              <p className="mt-1 text-xs text-triage/80">
+                👀 Shield the screen — no peekers.
+              </p>
               {/* Hold gauge */}
               <div className="mx-auto mt-3 h-1.5 w-40 overflow-hidden rounded-full bg-strut">
                 <motion.div
@@ -119,7 +123,7 @@ function HoldCard({ player, partnerName, onSeen }) {
               </p>
               {player.role === 'impostor' && partnerName && (
                 <p className="mt-3 rounded-lg bg-breach/15 px-3 py-2 text-sm text-breach">
-                  Your fellow Impostor is{' '}
+                  Your fellow Werewolf is{' '}
                   <span className="font-semibold">{partnerName}</span>.
                 </p>
               )}
@@ -176,13 +180,24 @@ export default function Reveal({ state, dispatch }) {
                   animate={{ boxShadow: ['0 0 0px var(--signal)', '0 0 28px -6px var(--signal)', '0 0 0px var(--signal)'] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <span className="text-4xl">📟</span>
+                  <Chip color={player.color} size={68} />
                 </motion.div>
                 <p className="text-lg text-vapor/60">Pass the phone to</p>
                 <p className="my-1 font-display text-5xl tracking-wide text-vapor">
                   {player.name}
                 </p>
-                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-signal/40 px-5 py-2.5 text-signal">
+
+                {/* Anti-peek warning — read this before you look */}
+                <div className="mx-auto mt-5 flex max-w-xs items-start gap-2.5 rounded-xl border border-triage/40 bg-triage/10 px-3.5 py-3 text-left">
+                  <span className="text-xl leading-none">🕵️</span>
+                  <p className="text-sm text-triage">
+                    <span className="font-semibold">Stand up to look.</span>{' '}
+                    Seated players can't see a standing screen — don't let anyone
+                    peek at your role.
+                  </p>
+                </div>
+
+                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-signal/40 px-5 py-2.5 text-signal">
                   Tap when {player.name} is holding it
                 </div>
               </div>

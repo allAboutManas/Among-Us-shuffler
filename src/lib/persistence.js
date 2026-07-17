@@ -15,6 +15,7 @@ export function saveRoster(players, settings) {
       players: players.map((p) => ({ id: p.id, name: p.name, color: p.color })),
       settings: {
         twoImpostors: !!settings.twoImpostors,
+        detective: settings.detective !== false, // default on
         muted: !!settings.muted,
         revealRoleOnOut: !!settings.revealRoleOnOut,
       },
@@ -41,6 +42,7 @@ export function loadRoster() {
         })),
       settings: {
         twoImpostors: !!parsed.settings?.twoImpostors,
+        detective: parsed.settings?.detective !== false, // default on
         muted: !!parsed.settings?.muted,
         revealRoleOnOut: !!parsed.settings?.revealRoleOnOut,
       },
