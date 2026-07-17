@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   Cold Vacuum — design tokens (single source of truth)
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --void: #0a0e14;
+  --hull: #161c26;
+  --strut: #2b3646;
+  --vapor: #e8edf2;
+  --signal: #4dffc3;
+  --breach: #ff3b5c;
+  --triage: #ffb84d;
+
+  /* App chrome */
+  --app-max: 480px;
+
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--vapor);
+  font-family: 'Space Grotesk', Inter, system-ui, sans-serif;
+  /* Prevent iOS rubber-band flashes of white and text auto-zoom */
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The starfield sits behind everything; subtle, cold. */
+#root {
+  position: relative;
+  isolation: isolate;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.font-display {
+  font-family: 'Oswald', 'Archivo Narrow', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Focus — visible keyboard rings on every interactive element.
+   Only for keyboard users, never nagging on touch/mouse.
+   ───────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+input {
+  /* iOS zooms if font-size < 16px on focus; keep it 16px+ */
+  font-size: 16px;
+}
+
+/* Utility: reserve iOS safe-area padding on the primary action zone */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Grid noise / scanline texture for the ship-terminal feel. */
+.hull-grid {
+  background-image:
+    linear-gradient(var(--strut) 1px, transparent 1px),
+    linear-gradient(90deg, var(--strut) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center;
+  opacity: 0.04;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Accessibility floor: honour prefers-reduced-motion.
+   Framer Motion handles most of this in JS, but nuke CSS
+   animations/transitions here as a belt-and-braces measure.
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom scrollbar — thin, cold, unobtrusive */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--strut);
+  border-radius: 3px;
+}
